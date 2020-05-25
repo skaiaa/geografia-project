@@ -5,9 +5,7 @@ var markers;
 var fromPoint;
 var toPoint;
 var numClicks=0;
-//var routinoURL="http://www.routino.org/uk-openlayers"
-//var routinoURL="http://localhost/routino/www/routino/router.html"
-var routinoURL="http://localhost/router.html"
+var routinoURL="http://localhost/routino/"
 var vectorLayer=null;
 
 var line_style = {
@@ -53,31 +51,30 @@ OpenLayers.Control.Click = OpenLayers.Class(OpenLayers.Control, {
         'stopSingle': false,
         'stopDouble': false
     },
+
     initialize: function(options) {
-        this.handlerOptions = OpenLayers.Util.extend(
-            {}, this.defaultHandlerOptions
-        );
-        OpenLayers.Control.prototype.initialize.apply(
-            this, arguments
-        );
+        this.handlerOptions = OpenLayers.Util.extend({}, this.defaultHandlerOptions);
+
+        OpenLayers.Control.prototype.initialize.apply(this, arguments);
+
         this.handler = new OpenLayers.Handler.Click(
             this, {
                 'click': this.trigger
             }, this.handlerOptions
         );
     },
+
     trigger: function(e) {
         var lonlat = map.getLonLatFromViewPortPx(e.xy);
         numClicks++;
-        //alert("Kliknąłeś "+numClicks+" razy");
-        //getLocationData(lonlat.lon, lonlat.lat);
-        if (numClicks==1) {
+
+        if (numClicks===1) {
             /* Marker startowy */
             markers.clearMarkers();
             fromPoint = new OpenLayers.LonLat(lonlat.lon, lonlat.lat);
             getLocationData(lonlat.lon, lonlat.lat);
         }
-        else if (numClicks==2) {
+        else if (numClicks===2) {
             /* Marker końcowy */
             toPoint = new OpenLayers.LonLat(lonlat.lon, lonlat.lat);
             getLocationData(lonlat.lon, lonlat.lat);
@@ -89,8 +86,7 @@ OpenLayers.Control.Click = OpenLayers.Class(OpenLayers.Control, {
     }
 });
 
-function getLocationData(lon, lat)
-{
+function getLocationData(lon, lat) {
     var xhttp = new XMLHttpRequest();
     var url = "https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat="+lat+"&lon="+lon;
     xhttp.onreadystatechange = function() {
@@ -104,16 +100,15 @@ function getLocationData(lon, lat)
     xhttp.send();
 };
 
-function getRoute(fromPoint,toPoint)
-{
+function getRoute(fromPoint,toPoint) {
     fromPoint = new OpenLayers.LonLat(10.2, 48.9)
     toPoint = new OpenLayers.LonLat(10.4, 48.9)
     var request = new XMLHttpRequest();
-    var url = routinoURL+"router.cgitransport=motorcar;lon1="+fromPoint.lon+";lat1="+fromPoint.lat+";lon2="+toPoint.lon+";lat2="+toPoint.lat+";language=en;type=shortest";
+    var url = routinoURL+"router.cgi?transport=motorcar;lon1="+fromPoint.lon+";lat1="+fromPoint.lat+";lon2="+toPoint.lon+";lat2="+toPoint.lat+";language=en;type=shortest";
     request.onreadystatechange = function() {
         //alert(this.readyState);
         alert(this.status);	//show request status
-        if (this.readyState == 4 && this.status == 200) {
+        if (this.readyState === 4 && this.status === 200) {
             var result = request.responseText;
             var uuid = result.substring(0,result.length - 4);
             alert(uuid);
@@ -127,8 +122,7 @@ function getRoute(fromPoint,toPoint)
 
 }
 
-function getRoutePolyline(result)
-{
+function getRoutePolyline(result) {
     var url = routinoURL+"results.cgi?uuid="+result+";type=shortest;format=gpxtrack";
     vectorLayer = new OpenLayers.Layer.Vector("Routes",
         {
@@ -142,8 +136,7 @@ function getRoutePolyline(result)
 }
 
 
-function init()
-{
+function init() {
     var options = {
         projection: mercator,
         displayProjection: geographic,
