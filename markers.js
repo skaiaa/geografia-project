@@ -6,7 +6,7 @@ var fromPoint;
 var toPoint;
 var numClicks=0;
 var routinoURL="http://localhost/routino/"
-var vectorLayer=null;
+var vectorLayer;
 
 var line_style = {
     strokeColor: "#0000EE",
@@ -66,17 +66,18 @@ OpenLayers.Control.Click = OpenLayers.Class(OpenLayers.Control, {
 
     trigger: function(e) {
         var lonlat = map.getLonLatFromViewPortPx(e.xy);
+        var lonlatGeo = map.getLonLatFromViewPortPx(e.xy).transform(map.getProjectionObject(), geographic);
         numClicks++;
 
         if (numClicks===1) {
             /* Marker startowy */
             markers.clearMarkers();
-            fromPoint = new OpenLayers.LonLat(lonlat.lon, lonlat.lat);
+            fromPoint = new OpenLayers.LonLat(lonlatGeo.lon, lonlatGeo.lat);
             getLocationData(lonlat.lon, lonlat.lat);
         }
         else if (numClicks===2) {
             /* Marker końcowy */
-            toPoint = new OpenLayers.LonLat(lonlat.lon, lonlat.lat);
+            toPoint = new OpenLayers.LonLat(lonlatGeo.lon, lonlatGeo.lat);
             getLocationData(lonlat.lon, lonlat.lat);
             getRoute(fromPoint, toPoint);
             numClicks=0;
@@ -101,19 +102,20 @@ function getLocationData(lon, lat) {
 };
 
 function getRoute(fromPoint,toPoint) {
-    fromPoint = new OpenLayers.LonLat(10.2, 48.9)
-    toPoint = new OpenLayers.LonLat(10.4, 48.9)
+    //fromPoint = new OpenLayers.LonLat(10.2, 48.9)
+    //toPoint = new OpenLayers.LonLat(10.4, 48.9)
     var request = new XMLHttpRequest();
-    var url = routinoURL+"router.cgi?transport=motorcar;lon1="+fromPoint.lon+";lat1="+fromPoint.lat+";lon2="+toPoint.lon+";lat2="+toPoint.lat+";language=en;type=shortest";
+    //var url = routinoURL+"router.cgi?transport=motorcar;lon1="+fromPoint.lon+";lat1="+fromPoint.lat+";lon2="+toPoint.lon+";lat2="+toPoint.lat+";language=en;type=shortest";
+var url = routinoURL + "router.cgi?transport=motorcar;lon1="+fromPoint.lon+";lat1="+fromPoint.lat+";lon2="+toPoint.lon+";lat2="+toPoint.lat+";language=pl";
     request.onreadystatechange = function() {
         //alert(this.readyState);
-        alert(this.status);	//show request status
+        //alert(this.status);	//show request status
         if (this.readyState === 4 && this.status === 200) {
             var result = request.responseText;
             var uuid = result.substring(0,result.length - 4);
-            alert(uuid);
-            alert(result);
-            getRoutePolyline(result);
+            //alert(uuid);
+            //alert(result);
+            getRoutePolyline(uuid);
 
         }
     };
@@ -123,7 +125,10 @@ function getRoute(fromPoint,toPoint) {
 }
 
 function getRoutePolyline(result) {
-    var url = routinoURL+"results.cgi?uuid="+result+";type=shortest;format=gpxtrack";
+    var url = routinoURL+"results.cgi?uuid="+result+";type=shortest;format=gpx-track";
+    if(vectorLayer != null) {
+      vectorLayer.destroy();
+    }
     vectorLayer = new OpenLayers.Layer.Vector("Routes",
         {
             protocol: new OpenLayers.Protocol.HTTP({url: url, format: new
@@ -133,6 +138,7 @@ function getRoutePolyline(result) {
         }
     );
     map.addLayer(vectorLayer);
+    map.setLayerIndex(vectorLayer, 0);
 }
 
 
